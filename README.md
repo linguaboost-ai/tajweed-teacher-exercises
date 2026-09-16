@@ -31,11 +31,16 @@ verstehen sich also. Mit beiden Schaltern hat der Lehrplan 31 Lektionen statt
 
 ### Aufrufen
 
-Die Seite lädt die Aufgaben zur Laufzeit und braucht deshalb einen Webserver —
-als Datei geöffnet sagt sie das auch:
+Im Netz: <https://tajweed-teacher-exercises.vercel.app> — Vercel liefert das
+Repository aus, `/` zeigt die Leseübungen (siehe `vercel.json`). Jeder Push auf
+einen Zweig baut eine eigene Adresse; der Zweig dieser Seite liegt unter
+`tajweed-teacher-exercises-git-c-467ca1-linguaboost-ais-projects.vercel.app`.
+
+Örtlich: die Seite lädt die Aufgaben zur Laufzeit und braucht deshalb einen
+Webserver — als Datei geöffnet sagt sie das auch:
 
     python3 -m http.server 8000
-    # http://localhost:8000/teacher-reading.html
+    # http://localhost:8000/
 
 Keine Bauwerkzeuge, kein Framework, kein CDN: eine HTML-Datei, die Aufgaben,
 die beiden Schriften und das Logo.
