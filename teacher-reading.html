@@ -45,6 +45,9 @@
   --accent:#B99F6F;
   --gradient-start:#E8E4F0;
   --gradient-end:#D6E5F0;
+  /* Eingeschaltet — grün, damit es ins Auge fällt; dieselbe Farbe wie die
+     Schalter der Übungs-App. */
+  --an:#45A05A;
   /* Die Regelstellen liegen auf der Warnfarbe der Vorlage. */
   --mark:#936515;
   --mark-line:#D19F49;
@@ -171,7 +174,7 @@ mark.hit{
   width:1rem;height:1rem;border-radius:var(--radius-pill);
   background:#fff;box-shadow:var(--shadow-sm);transition:transform .15s;
 }
-.switch input:checked + .track{background:var(--primary)}
+.switch input:checked + .track{background:var(--an)}
 .switch input:checked + .track::after{transform:translateX(1rem)}
 .switch input:focus-visible + .track{outline:2px solid var(--ring);outline-offset:2px}
 .switch .tx{color:var(--foreground)}
