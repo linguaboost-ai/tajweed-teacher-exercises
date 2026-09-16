@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>German Method – Leseübungen</title>
+<link rel="icon" type="image/png" href="./assets/gm-logo-horizontal.png">
+
+<style>
+/* ==========================================================================
+   Leseübungen für den Zoom-Unterricht
+
+   Der Lehrer teilt den Bildschirm, der Schüler liest den arabischen Text vor.
+   Deshalb gibt es hier keine Antwortmöglichkeiten, keine Lösungen, keine
+   Punkte und keinen Ton — nur den Text, groß und ruhig gesetzt.
+
+   Aufbau, Farben, Abstände und Knöpfe sind von teacher-exercises.html
+   übernommen, damit die Seite wie eine Schwesterseite wirkt.
+   ========================================================================== */
+
+/* Quranschrift des Mushaf (KFGQPC HAFS) … */
+@font-face{
+  font-family:'Hafs';
+  src:url('fonts/hafs-uthmanic.woff2') format('woff2');
+  font-weight:normal;font-style:normal;font-display:swap;
+}
+/* … und Amiri Quran allein für die verzierte Kartusche der Versnummer. */
+@font-face{
+  font-family:'AyahMark';
+  src:url('fonts/amiri-quran-arabic-400-normal.woff2') format('woff2');
+  font-weight:normal;font-style:normal;font-display:swap;
+}
+
+:root{
+  /* Farben und Radien der Vorlage */
+  --background:#F4F0EB;
+  --foreground:#363636;
+  --card:#FFFFFF;
+  --primary:#26247B;
+  --primary-foreground:#FFFFFF;
+  --muted:#E9E8F1;
+  --muted-foreground:#6D6D6D;
+  --border:#D5D4DF;
+  --ring:#5A5595;
+  --accent:#B99F6F;
+  --gradient-start:#E8E4F0;
+  --gradient-end:#D6E5F0;
+  /* Die Regelstellen liegen auf der Warnfarbe der Vorlage. */
+  --mark:#936515;
+  --mark-line:#D19F49;
+  --mark-bg:#F8F1DA;
+
+  --radius-row:1.25rem;      /* rounded-lg der Vorlage */
+  --radius-card:1rem;        /* rounded-2xl der Vorlage */
+  --radius-input:.75rem;
+  --radius-pill:9999px;
+
+  --shadow-sm:0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px -1px rgba(0,0,0,.1);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -2px rgba(0,0,0,.1);
+
+  --rail:16rem;              /* w-64 */
+  --list:19rem;
+  color-scheme:light only;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--foreground);
+  background:linear-gradient(to bottom right,var(--gradient-start),var(--gradient-end));
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,
+              'Fira Sans','Droid Sans','Helvetica Neue',sans-serif;
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* --- Arabischer Text -------------------------------------------------------
+   Rechtsläufig und gegen die Umgebung abgeschirmt, sonst rutschen lateinische
+   Ziffern und Satzzeichen an die falsche Stelle. */
+.ar{
+  font-family:'Hafs','Traditional Arabic','Scheherazade New','Amiri',serif;
+  direction:rtl;unicode-bidi:isolate;
+}
+/* Die indischen Ziffern am Versende sind die Versnummer; U+06DD davor setzt
+   sie in die verzierte Kartusche, die aus Amiri Quran kommt. */
+.ayah{
+  font-family:'AyahMark','Hafs','Amiri Quran',serif;
+  white-space:nowrap;padding-inline-start:.12em;
+}
+/* Einzelne arabische Buchstaben mitten in einem deutschen Lektionstitel:
+   dieselbe Schrift, und abgeschirmt, damit sie an ihrem Platz bleiben. */
+.arin{
+  font-family:'Hafs','Traditional Arabic','Scheherazade New','Amiri',serif;
+  unicode-bidi:isolate;
+}
+mark.hit{
+  background:var(--mark-bg);color:var(--mark);border-radius:5px;padding:0 1px;
+  box-shadow:0 0 0 1px var(--mark-line) inset;
+}
+/* Groß gesetzt genügt der farbige Grund; der Rahmen würde um ein einzelnes
+   Vokalzeichen als hoher schmaler Kasten stehen. */
+.subject mark.hit{border-radius:.12em;padding:0;box-shadow:none}
+
+/* --- Gerüst --------------------------------------------------------------- */
+.shell{display:flex;height:100%;overflow:hidden}
+
+/* --- Lektionsauswahl links ------------------------------------------------ */
+.rail{
+  flex:0 0 var(--rail);width:var(--rail);
+  display:flex;flex-direction:column;
+  background:var(--card);border-right:1px solid var(--border);
+}
+.rail .brand{display:flex;align-items:center;padding:1rem 1rem .75rem}
+.rail .brand img{height:2.25rem;width:auto}
+.railhead,.listhead{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.75rem 1rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.listhead{border-top:0}
+.railhead h2,.listhead h2{
+  margin:0;font-size:1rem;font-weight:600;color:var(--primary);
+}
+.railhead svg,.listhead svg{width:1.25rem;height:1.25rem;color:var(--primary);flex:0 0 auto}
+.listhead .tally{margin-left:auto;font-size:.75rem;color:var(--muted-foreground)}
+
+.lessons{flex:1 1 auto;overflow-y:auto;padding:.5rem}
+.lessons .cap{
+  padding:.75rem .5rem .25rem;
+  font-size:.75rem;font-weight:600;line-height:1.333;
+  color:var(--muted-foreground);text-transform:uppercase;letter-spacing:.05em;
+  display:flex;align-items:baseline;gap:.5rem;
+}
+.lessons .cap b{margin-left:auto;font-weight:500;letter-spacing:0;text-transform:none}
+.lesson{
+  display:flex;align-items:center;gap:.5rem;width:100%;
+  padding:.5rem .75rem;border-radius:var(--radius-row);
+  text-align:left;color:var(--primary);
+  transition:background-color .15s,color .15s,box-shadow .15s;
+}
+.lesson:hover{background:var(--muted)}
+.lesson[aria-current="true"]{
+  background:var(--primary);color:var(--primary-foreground);box-shadow:var(--shadow-md);
+}
+.lesson .no{
+  flex:0 0 1.5rem;font-size:.75rem;font-variant-numeric:tabular-nums;
+  color:var(--muted-foreground);
+}
+.lesson[aria-current="true"] .no{color:rgba(255,255,255,.7)}
+.lesson .tt{font-weight:500;min-width:0}
+.lesson .ct{
+  margin-left:auto;flex:0 0 auto;
+  font-size:.75rem;font-variant-numeric:tabular-nums;color:var(--muted-foreground);
+}
+.lesson[aria-current="true"] .ct{color:rgba(255,255,255,.7)}
+
+/* --- Schalter ------------------------------------------------------------- */
+.ctl{padding:.75rem 1rem;border-top:1px solid var(--border);display:grid;gap:.625rem}
+.switch{display:flex;align-items:center;gap:.625rem;cursor:pointer;font-size:.8125rem}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.switch .track{
+  flex:0 0 auto;position:relative;width:2.25rem;height:1.25rem;
+  border-radius:var(--radius-pill);background:var(--border);
+  transition:background-color .15s;
+}
+.switch .track::after{
+  content:"";position:absolute;top:.125rem;left:.125rem;
+  width:1rem;height:1rem;border-radius:var(--radius-pill);
+  background:#fff;box-shadow:var(--shadow-sm);transition:transform .15s;
+}
+.switch input:checked + .track{background:var(--primary)}
+.switch input:checked + .track::after{transform:translateX(1rem)}
+.switch input:focus-visible + .track{outline:2px solid var(--ring);outline-offset:2px}
+.switch .tx{color:var(--foreground)}
+.switch .hint{color:var(--muted-foreground);font-size:.75rem}
+
+.railfoot{
+  padding:.5rem 1rem;border-top:1px solid var(--border);
+  background:rgba(233,232,241,.5);
+  font-size:.75rem;color:var(--muted-foreground);
+}
+
+/* --- Mitte ---------------------------------------------------------------- */
+.stage{flex:1 1 auto;min-width:0;overflow-y:auto;display:flex}
+/* „margin:auto“ statt „justify-content“: so steht die Aufgabe in der Mitte,
+   und wird sie einmal höher als der Schirm, bleibt sie doch erreichbar. */
+.stage .wrap{
+  width:100%;max-width:56rem;margin:auto;padding:1.5rem 1rem;
+  display:flex;flex-direction:column;gap:1.5rem;
+}
+@media (min-width:768px){.stage .wrap{padding:2rem 1rem}}
+.stage h1{
+  margin:0;text-align:center;font-weight:700;color:var(--primary);
+  font-size:1.25rem;line-height:1.4;
+}
+@media (min-width:768px){.stage h1{font-size:1.5rem}}
+@media (min-width:1024px){.stage h1{font-size:1.875rem;line-height:1.2}}
+.stage .sub{margin:.25rem 0 0;text-align:center;font-size:.875rem;color:var(--muted-foreground)}
+
+/* Lektionswahl auf kleinen Schirmen */
+.pick{display:none;position:relative}
+.pick select{
+  width:100%;appearance:none;
+  border:1px solid var(--border);border-radius:var(--radius-row);background:var(--card);
+  padding:.75rem 2.5rem .75rem 1rem;
+  font-size:.875rem;font-weight:500;color:var(--primary);box-shadow:var(--shadow-sm);
+}
+.pick svg{
+  position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+  width:1rem;height:1rem;color:var(--ring);pointer-events:none;
+}
+
+/* Wörter | Verse */
+.seg{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:.25rem;
+  min-height:2.5rem;align-items:center;
+  border-radius:var(--radius-pill);background:var(--muted);padding:.25rem;
+  color:var(--muted-foreground);
+}
+.seg button{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:2.5rem;padding:.5rem 1rem;border-radius:var(--radius-pill);
+  font-size:.875rem;font-weight:500;transition:all .15s;
+}
+.seg button:hover:not(:disabled):not([aria-pressed="true"]){color:var(--primary)}
+.seg button[aria-pressed="true"]{
+  background:var(--primary);color:var(--primary-foreground);box-shadow:var(--shadow-sm);
+}
+.seg button:disabled{pointer-events:none;opacity:.5}
+
+/* Die Leseaufgabe */
+.card{
+  border:1px solid var(--border);border-radius:var(--radius-card);
+  background:var(--card);color:var(--foreground);box-shadow:var(--shadow-md);
+}
+.card .body{padding:2rem 1.5rem}
+.card .row{display:flex;align-items:center;justify-content:center;gap:1rem}
+.nav{
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  width:3rem;height:3rem;border-radius:var(--radius-pill);
+  transition:background-color .15s,color .15s;
+}
+.nav:hover:not(:disabled){background:var(--muted);color:var(--primary)}
+.nav:disabled{pointer-events:none;opacity:.5}
+.nav svg{width:2rem;height:2rem}
+.subject{
+  flex:1 1 auto;min-width:0;text-align:center;
+  margin:0;font-size:2.25rem;line-height:1.625;
+}
+@media (min-width:640px){.subject{font-size:3rem}}
+@media (min-width:768px){.subject{font-size:3.75rem}}
+.subject.long{font-size:1.875rem}
+@media (min-width:640px){.subject.long{font-size:2.25rem}}
+@media (min-width:768px){.subject.long{font-size:3rem}}
+.card .foot{margin-top:1.5rem;text-align:center;font-size:.875rem;color:var(--muted-foreground)}
+.card .src{margin-top:.5rem;text-align:center;font-size:.75rem;color:var(--muted-foreground)}
+.empty{padding:2rem 1.5rem;text-align:center;color:var(--muted-foreground)}
+
+/* --- Liste der Leseaufgaben rechts ---------------------------------------- */
+.side{
+  flex:0 0 var(--list);width:var(--list);
+  display:flex;flex-direction:column;
+  background:var(--card);border-left:1px solid var(--border);
+}
+.items{flex:1 1 auto;overflow-y:auto;padding:.5rem;display:grid;gap:.125rem;align-content:start}
+.item{
+  display:flex;align-items:baseline;gap:.625rem;width:100%;
+  padding:.5rem .75rem;border-radius:var(--radius-input);
+  text-align:left;transition:background-color .15s,color .15s,box-shadow .15s;
+}
+.item:hover{background:var(--muted)}
+.item[aria-current="true"]{
+  background:var(--primary);color:var(--primary-foreground);box-shadow:var(--shadow-md);
+}
+.item .no{
+  flex:0 0 1.75rem;font-size:.75rem;font-variant-numeric:tabular-nums;
+  color:var(--muted-foreground);text-align:right;
+}
+.item[aria-current="true"] .no{color:rgba(255,255,255,.7)}
+.item .tx{flex:1 1 auto;min-width:0;font-size:1.25rem;line-height:1.9;text-align:right}
+.items .none{padding:1.5rem .75rem;text-align:center;color:var(--muted-foreground);font-size:.8125rem}
+
+.ctlmob{display:none}
+
+/* --- Schmale Schirme ------------------------------------------------------ */
+@media (max-width:1023px){
+  .shell{flex-direction:column;height:auto;min-height:100%;overflow:visible}
+  .rail{display:none}
+  .side{
+    flex:1 1 auto;width:auto;border-left:0;border-top:1px solid var(--border);
+    max-height:none;
+  }
+  .items{overflow-y:visible}
+  .stage{overflow-y:visible}
+  .pick{display:block}
+  .ctlmob{display:block}
+}
+.ctlmob .ctl{
+  border:1px solid var(--border);border-top:1px solid var(--border);
+  border-radius:var(--radius-card);background:var(--card);box-shadow:var(--shadow-sm);
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ===== Lektionsauswahl ================================================ -->
+  <aside class="rail">
+    <div class="brand"><img src="./assets/gm-logo-horizontal.png" alt="German Method"></div>
+
+    <div class="railhead">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 7v14"></path>
+        <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path>
+      </svg>
+      <h2>Lektionen</h2>
+    </div>
+
+    <nav class="lessons" id="lessons" aria-label="Lektionen"></nav>
+
+    <div class="ctl" id="ctlRail"></div>
+    <div class="railfoot" id="railfoot">Ausgewählt: —</div>
+  </aside>
+
+  <!-- ===== Leseaufgabe ==================================================== -->
+  <main class="stage">
+    <div class="wrap">
+      <div>
+        <h1>Leseübungen</h1>
+        <p class="sub" id="sub">Aufgaben werden geladen …</p>
+      </div>
+
+      <div class="pick">
+        <select id="pickLesson" aria-label="Lektion"></select>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6"></path>
+        </svg>
+      </div>
+
+      <div class="seg" role="group" aria-label="Gattung">
+        <button type="button" data-kind="word" aria-pressed="true">Wörter</button>
+        <button type="button" data-kind="verse" aria-pressed="false">Verse</button>
+      </div>
+
+      <div class="card">
+        <div class="body" id="cardBody">
+          <div class="empty" id="cardEmpty">Aufgaben werden geladen …</div>
+        </div>
+      </div>
+
+      <div class="ctlmob"><div class="ctl" id="ctlMob"></div></div>
+    </div>
+  </main>
+
+  <!-- ===== Liste ========================================================== -->
+  <aside class="side">
+    <div class="listhead">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path>
+        <path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path>
+      </svg>
+      <h2>Leseaufgaben</h2>
+      <span class="tally" id="tally"></span>
+    </div>
+    <div class="items" id="items"></div>
+  </aside>
+
+</div>
+
+<script>
+"use strict";
+
+/* ==========================================================================
+   Lehrplan — dieselben Blöcke und Titel wie in der Übungs-App
+   ========================================================================== */
+const BLOCKS = [
+  {file:"tafkheem",     von: 1, bis: 9, name:"Tafkheem"},
+  {file:"qalqala",      von:10, bis:14, name:"Qalqalah"},
+  {file:"idgham",       von:15, bis:21, name:"Idgham"},
+  {file:"ikhfa-idgham", von:22, bis:26, name:"Ikhfa & Idgham"},
+  {file:"iqlab",        von:27, bis:28, name:"Iqlab"},
+  {file:"madd",         von:29, bis:34, name:"Madd"},
+  {file:"waqf",         von:35, bis:40, name:"Waqf"}
+];
+
+const LESSONS = {
+   1:"Qaf ق und Kaf ك",              21:"Noon und Tanween vor Ya",
+   2:"Ta ط und Ta ت",                22:"Noon sakin vor 15 Buchstaben",
+   3:"Kha خ und Ha ح",               23:"Tanween vor 15 Buchstaben",
+   4:"Ghayn غ und Ha ه",             24:"Meem vor Meem",
+   5:"Dad ض und Dal د",              25:"Noon und Tanween vor Meem",
+   6:"Dha ظ und Dhal ذ",             26:"Meem vor Ba, Ba vor Meem",
+   7:"Sad ص und Seen س",             27:"Noon sakin vor Ba",
+   8:"Regeln des Ra ر",              28:"Tanween vor Ba",
+   9:"Der Name Allah",               29:"Madd Muttasil",
+  10:"Dal د und Dad ض",              30:"Madd Muttasil mit Waw und Ya",
+  11:"Ba ب",                         31:"Madd Munfasil",
+  12:"Jeem ج",                       32:"Madd Silah",
+  13:"Qaf ق und Kaf ك",              33:"Madd Lazim im Wort",
+  14:"Ta ط und Ta ت",                34:"Madd Lazim in Sureneröffnungen",
+  15:"Gleiche Buchstaben",           35:"Waqf Jaiz ج",
+  16:"Ähnliche Buchstaben",          36:"Waqf Hasan صلى",
+  17:"Noon vor Lam und Ra",          37:"Waqf Kafee قلى",
+  18:"Tanween vor Lam und Ra",       38:"Waqf Mamnoo لا",
+  19:"Noon und Tanween vor Noon",    39:"Waqf Lazim م und Saktah س",
+  20:"Noon und Tanween vor Waw",     40:"Muanaqah ۛ"
+};
+
+/* ==========================================================================
+   Gemerkte Einstellungen
+   ========================================================================== */
+const store = {
+  get(k, fb){ try { const v = localStorage.getItem(k); return v === null ? fb : v; }
+              catch(e){ return fb; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+};
+
+const S = {
+  /* Für Fortgeschrittene sind die Lektionen zusammengefasst — das ist der
+     Normalfall; dieselben Schlüssel wie in der Übungs-App. */
+  advTafkheem: store.get("tajwid.advTafkheem", "1") === "1",
+  advQalqala:  store.get("tajwid.advQalqala",  "1") === "1",
+  /* Die Regelstellen einzufärben ist eine Hilfe für den Lehrer, nicht für
+     den Schüler, deshalb ist es voreingestellt aus. */
+  spots:       store.get("tajwid.teacherSpots", "0") === "1",
+  /* Gemerkt wird ein Schlüssel, keine Nummer: die Nummer verschiebt sich,
+     sobald ein Schalter umgelegt wird. */
+  key:  store.get("tajwid.teacherLesson", "L1"),
+  kind: store.get("tajwid.teacherKind", "word"),
+  i: 0
+};
+
+let FORT = null;          // die zusammengefassten Lektionen aus advanced.json
+const DATA = {};          // block -> Aufgaben
+let AUFGABEN = [];        // die Leseaufgaben der gewählten Lektion und Gattung
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                          .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+/* Die Lektionstitel sind deutsch mit einzelnen arabischen Buchstaben darin. */
+const ARAB = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]+/g;
+const titelHTML = s => esc(s).replace(ARAB, m => '<span class="arin">' + m + "</span>");
+
+/* ==========================================================================
+   Welcher Text wird zur Leseaufgabe
+
+   Eine Aufgabe des Datensatzes wird zu einer oder mehreren Leseaufgaben.
+   ========================================================================== */
+const MARKS = {"none":true, "-":true};
+
+function leseaufgaben(x){
+  /* „matching“ nennt vier Wörter einzeln; subject ist dort null. */
+  if (x.task_type === "matching")
+    return (x.items || []).map(it => ({text: it.text, spots: it.spots || []}));
+
+  /* „match“ verbindet ein Vorgabewort mit den richtigen Optionen. */
+  if (x.task_type === "match"){
+    const opts = x.options || [];
+    const nach = new Map(opts.map(o => [o.id, o]));
+    let wahl = (x.answer || []).filter(a => typeof a === "number")
+                               .map(a => nach.get(a)).filter(Boolean);
+    /* Lautet die Antwort „kommt nicht vor“, gehören alle arabischen Optionen
+       geübt — gerade weil dort nichts verschmilzt. */
+    wahl = wahl.some(o => MARKS[o.text])
+         ? opts.filter(o => !MARKS[o.text])
+         : wahl.filter(o => !MARKS[o.text]);
+
+    const subj = x.subject || {};
+    const stext = (subj.text || "").trim();
+    /* „اختر“ heißt „wähle“ — dann gibt es kein Vorgabewort. */
+    const vorgabe = (stext === "" || stext === "اختر") ? "" : stext;
+
+    return wahl.map(o => {
+      if (!vorgabe) return {text: o.text, spots: o.spots || []};
+      /* Die Regel entsteht erst über die Wortgrenze hinweg, also gehört die
+         Verbindung als Ganzes gelesen. */
+      const off = vorgabe.length + 1;
+      const spots = (subj.spots || []).slice().concat(
+        (o.spots || []).map(s => ({start: s.start + off, end: s.end + off, text: s.text})));
+      return {text: vorgabe + " " + o.text, spots: spots};
+    });
+  }
+
+  /* Alle übrigen Aufgabentypen: der Text des subject, genau einmal. */
+  const subj = x.subject || {};
+  return subj.text ? [{text: subj.text, spots: subj.spots || []}] : [];
+}
+
+/* ==========================================================================
+   Arabischer Satz
+   ========================================================================== */
+/* Indische Ziffern am Ende sind die Versnummer, nicht Text. */
+const AYAH_TAIL = /[٠-٩۰-۹]+$/;
+
+function ayahSplit(text){
+  const s = String(text == null ? "" : text), m = s.match(AYAH_TAIL);
+  if (!m) return ["", s, ""];
+  return ["", s.slice(0, m.index).replace(/[\s ]+$/, ""), m[0]];
+}
+
+/* U+06DD unmittelbar vor die Ziffern, davor ein Leerzeichen: so sitzt die
+   Nummer in der verzierten Kartusche. */
+function ayahHTML(ziffern){
+  return ziffern ? ' <span class="ayah">۝' + esc(ziffern) + "</span>" : "";
+}
+
+function textHTML(text, spots, zeigen){
+  const teile = ayahSplit(text), stamm = teile[1], schwanz = ayahHTML(teile[2]);
+  if (!zeigen || !spots || !spots.length) return esc(stamm) + schwanz;
+  const sortiert = spots.slice().sort((a, b) => a.start - b.start);
+  let out = "", cur = 0;
+  for (const s of sortiert){
+    const a = Math.max(cur, Math.min(s.start, stamm.length));
+    const b = Math.min(s.end, stamm.length);
+    if (b <= a) continue;
+    out += esc(stamm.slice(cur, a)) + '<mark class="hit">' + esc(stamm.slice(a, b)) + "</mark>";
+    cur = b;
+  }
+  return out + esc(stamm.slice(cur)) + schwanz;
+}
+
+/* In der Liste stehen Verse gekürzt — drei Wörter reichen zum Wiedererkennen,
+   und die Versnummer lässt man dort weg. Wörter stehen voll da. */
+const VORSCHAU_WOERTER = 3;
+
+function vorschauHTML(a, kind){
+  if (kind !== "verse") return textHTML(a.text, a.spots, S.spots);
+  const stamm = ayahSplit(a.text)[1];
+  const w = stamm.split(/\s+/).filter(Boolean);
+  const kurz = w.slice(0, VORSCHAU_WOERTER).join(" ");
+  return esc(kurz) + (w.length > VORSCHAU_WOERTER ? " …" : "");
+}
+
+/* ==========================================================================
+   Lektionsliste — hängt davon ab, was zusammengefasst ist
+   ========================================================================== */
+function blockOf(n){ return BLOCKS.find(b => n >= b.von && n <= b.bis); }
+
+function fortAktiv(){
+  return (FORT || []).filter(f => (f.group === "tafkheem" && S.advTafkheem)
+                              || (f.group === "qalqala"  && S.advQalqala));
+}
+
+/* Ist ein Schalter an, verschwinden die Lektionen, die er ersetzt, und die
+   Nummerierung rückt fortlaufend auf. */
+function lektionsliste(){
+  const zusammen = fortAktiv();
+  const aus = [];
+  let alt = 1, nr = 1;
+  while (alt <= 40){
+    const hier = zusammen.filter(f => f.replaces[0] === alt);
+    if (hier.length){
+      for (const f of hier)
+        aus.push({nr: nr++, key: f.id, fort: f, block: f.group,
+                  titel: f.de, quelle: f.replaces});
+      alt = hier[0].replaces[hier[0].replaces.length - 1] + 1;
+    } else {
+      aus.push({nr: nr++, key: "L" + alt, lesson: alt, block: blockOf(alt).file,
+                titel: LESSONS[alt], quelle: [alt]});
+      alt++;
+    }
+  }
+  return aus;
+}
+
+function aktuelle(liste){
+  return liste.find(e => e.key === S.key) || liste[0];
+}
+
+/* ==========================================================================
+   Aufgaben der gewählten Lektion
+   ========================================================================== */
+function aufgabenDerLektion(e){
+  const alle = DATA[e.block] || [];
+  if (e.fort){
+    /* Die zusammengefasste Lektion nennt ihre Aufgaben einzeln und in der
+       Reihenfolge, in der sie drankommen sollen. */
+    const nach = new Map(alle.map(x => [x.id, x]));
+    return e.fort.tasks.map(i => nach.get(i)).filter(Boolean);
+  }
+  return alle.filter(x => x.lesson === e.lesson);
+}
+
+/* Genau ein Feld entscheidet: ist „sura“ gesetzt, ist es ein Vers. */
+const gattung = x => (x.sura == null ? "word" : "verse");
+
+/* Innerhalb einer Lektion nach identischem Text entdoppeln — derselbe Vers
+   kommt in mehreren Aufgaben vor, der Lehrer will ihn einmal. */
+function leseliste(e, kind){
+  const gesehen = new Map();
+  for (const x of aufgabenDerLektion(e)){
+    if (gattung(x) !== kind) continue;
+    for (const a of leseaufgaben(x))
+      if (!gesehen.has(a.text)) gesehen.set(a.text, a);
+  }
+  return Array.from(gesehen.values());
+}
+
+function anzahl(e, kind){ return leseliste(e, kind).length; }
+
+/* ==========================================================================
+   Zeichnen
+   ========================================================================== */
+function schalter(id, an, tx, hint){
+  return '<label class="switch"><input type="checkbox" data-sw="' + id + '"'
+       + (an ? " checked" : "") + '><span class="track" aria-hidden="true"></span>'
+       + '<span class="tx">' + esc(tx)
+       + (hint ? ' <span class="hint">' + esc(hint) + "</span>" : "")
+       + "</span></label>";
+}
+
+function drawCtl(){
+  const html = schalter("advTafkheem", S.advTafkheem, "Tafkheem fortgeschritten", "fasst 1–7 zusammen")
+             + schalter("advQalqala",  S.advQalqala,  "Qalqalah fortgeschritten", "fasst 10–14 zusammen")
+             + schalter("spots",       S.spots,       "Regelstellen einfärben",   "nur für den Lehrer");
+  $("ctlRail").innerHTML = html;
+  $("ctlMob").innerHTML = html;
+}
+
+function drawRail(){
+  const liste = lektionsliste(), hier = aktuelle(liste);
+  const nav = $("lessons");
+  const sel = $("pickLesson");
+  nav.innerHTML = "";
+  sel.innerHTML = "";
+
+  let offen = null, aktiv = null, gruppe = null;
+  for (const e of liste){
+    if (e.block !== offen){
+      offen = e.block;
+      const b = BLOCKS.find(b => b.file === e.block);
+      const gleich = liste.filter(x => x.block === e.block);
+      const spanne = gleich.length > 1
+        ? gleich[0].nr + "–" + gleich[gleich.length - 1].nr : String(gleich[0].nr);
+      const cap = document.createElement("div");
+      cap.className = "cap";
+      cap.innerHTML = "<span>" + esc(b.name) + "</span><b>" + spanne + "</b>";
+      nav.append(cap);
+      gruppe = document.createElement("optgroup");
+      gruppe.label = b.name;
+      sel.append(gruppe);
+    }
+
+    const n = anzahl(e, "word") + anzahl(e, "verse");
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "lesson";
+    btn.setAttribute("aria-current", String(e.key === hier.key));
+    btn.innerHTML = '<span class="no">' + e.nr + '</span>'
+                  + '<span class="tt">' + titelHTML(e.titel) + '</span>'
+                  + '<span class="ct">' + n + '</span>';
+    if (e.fort) btn.title = "Fasst Lektion " + e.quelle[0] + "–"
+                          + e.quelle[e.quelle.length - 1] + " zusammen";
+    btn.addEventListener("click", () => openLesson(e.key));
+    if (e.key === hier.key) aktiv = btn;
+    nav.append(btn);
+
+    const opt = document.createElement("option");
+    opt.value = e.key;
+    opt.textContent = e.nr + ". " + e.titel + " (" + n + ")";
+    opt.selected = e.key === hier.key;
+    gruppe.append(opt);
+  }
+  if (aktiv) aktiv.scrollIntoView({block: "nearest"});
+
+  $("railfoot").innerHTML = "Ausgewählt: " + hier.nr + ". " + titelHTML(hier.titel);
+  $("sub").innerHTML = "Lektion " + hier.nr + " \u2014 " + titelHTML(hier.titel);
+}
+
+function drawSeg(e){
+  const leer = {word: anzahl(e, "word") === 0, verse: anzahl(e, "verse") === 0};
+  document.querySelectorAll(".seg button").forEach(b => {
+    const k = b.dataset.kind;
+    b.disabled = leer[k];
+    b.setAttribute("aria-pressed", String(k === S.kind));
+    b.title = leer[k] ? "In dieser Lektion gibt es keine "
+                      + (k === "word" ? "Wörter" : "Verse") : "";
+  });
+}
+
+function drawList(){
+  const box = $("items");
+  box.innerHTML = "";
+  $("tally").textContent = AUFGABEN.length
+    ? AUFGABEN.length + (S.kind === "word" ? " Wörter" : " Verse") : "";
+
+  if (!AUFGABEN.length){
+    const d = document.createElement("div");
+    d.className = "none";
+    d.textContent = S.kind === "word"
+      ? "In dieser Lektion gibt es keine Wörter."
+      : "In dieser Lektion gibt es keine Verse.";
+    box.append(d);
+    return;
+  }
+
+  AUFGABEN.forEach((a, k) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "item";
+    btn.setAttribute("aria-current", String(k === S.i));
+    btn.innerHTML = '<span class="no">' + (k + 1) + '</span>'
+                  + '<span class="tx ar" lang="ar">' + vorschauHTML(a, S.kind) + "</span>";
+    /* Ein Klick zeigt die Aufgabe sofort groß in der Mitte. */
+    btn.addEventListener("click", () => zeige(k));
+    box.append(btn);
+  });
+}
+
+function drawCard(){
+  const body = $("cardBody");
+  if (!AUFGABEN.length){
+    body.innerHTML = '<div class="empty">'
+      + (S.kind === "word" ? "In dieser Lektion gibt es keine Wörter — wählen Sie „Verse“."
+                           : "In dieser Lektion gibt es keine Verse — wählen Sie „Wörter“.")
+      + "</div>";
+    return;
+  }
+  const a = AUFGABEN[S.i];
+  const lang = ayahSplit(a.text)[1].trim().split(/\s+/).length > 3;
+
+  body.innerHTML =
+      '<div class="row">'
+    +   '<button type="button" class="nav" data-go="-1" aria-label="Zurück"'
+    +     (S.i === 0 ? " disabled" : "") + '>'
+    +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
+    +     ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    +     '<path d="m15 18-6-6 6-6"></path></svg></button>'
+    +   '<p class="subject ar' + (lang ? " long" : "") + '" dir="rtl" lang="ar">'
+    +     textHTML(a.text, a.spots, S.spots) + "</p>"
+    +   '<button type="button" class="nav" data-go="1" aria-label="Weiter"'
+    +     (S.i === AUFGABEN.length - 1 ? " disabled" : "") + '>'
+    +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
+    +     ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+    +     '<path d="m9 18 6-6-6-6"></path></svg></button>'
+    + "</div>"
+    + '<div class="foot">' + (S.i + 1) + " von " + AUFGABEN.length + "</div>";
+
+  body.querySelectorAll("[data-go]").forEach(b =>
+    b.addEventListener("click", () => go(Number(b.dataset.go))));
+}
+
+/* ==========================================================================
+   Steuern
+   ========================================================================== */
+function zeige(k){
+  if (!AUFGABEN.length) return;
+  S.i = Math.max(0, Math.min(k, AUFGABEN.length - 1));
+  drawCard();
+  const box = $("items");
+  box.querySelectorAll(".item").forEach((b, n) => {
+    b.setAttribute("aria-current", String(n === S.i));
+    if (n === S.i) b.scrollIntoView({block: "nearest"});
+  });
+}
+
+function go(d){ zeige(S.i + d); }
+
+function frisch(){
+  const e = aktuelle(lektionsliste());
+  /* Gewünscht ist, was der Lehrer zuletzt gewählt hat; die Lektionen 34–40
+     haben aber gar keine Wörter — dann steht die andere Gattung an, und das
+     ist kein Fehler. */
+  S.kind = store.get("tajwid.teacherKind", "word") === "verse" ? "verse" : "word";
+  if (anzahl(e, S.kind) === 0){
+    const andere = S.kind === "word" ? "verse" : "word";
+    if (anzahl(e, andere) > 0) S.kind = andere;
+  }
+  AUFGABEN = leseliste(e, S.kind);
+  S.i = 0;
+  drawSeg(e);
+  drawList();
+  drawCard();
+}
+
+function openLesson(key){
+  S.key = key;
+  store.set("tajwid.teacherLesson", key);
+  drawRail();
+  frisch();
+}
+
+function setKind(kind){
+  S.kind = kind;
+  store.set("tajwid.teacherKind", kind);
+  frisch();
+}
+
+document.querySelectorAll(".seg button").forEach(b =>
+  b.addEventListener("click", () => setKind(b.dataset.kind)));
+
+$("pickLesson").addEventListener("change", ev => openLesson(ev.target.value));
+
+/* Beide Schalterblöcke (Rand und schmaler Schirm) hängen am selben Zustand. */
+document.addEventListener("change", ev => {
+  const sw = ev.target.closest("[data-sw]");
+  if (!sw) return;
+  const id = sw.dataset.sw;
+  if (id === "spots"){
+    S.spots = sw.checked;
+    store.set("tajwid.teacherSpots", S.spots ? "1" : "0");
+    drawCtl();
+    drawList();
+    drawCard();
+    zeige(S.i);
+    return;
+  }
+  S[id] = sw.checked;
+  store.set("tajwid." + id, sw.checked ? "1" : "0");
+  drawCtl();
+  drawRail();
+  frisch();
+});
+
+/* Pfeiltasten, damit der Lehrer ohne Maus durch die Liste kommt. */
+document.addEventListener("keydown", ev => {
+  if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (ev.target.closest("input, select, textarea")) return;
+  if (ev.key === "ArrowRight"){ go(1);  ev.preventDefault(); }
+  else if (ev.key === "ArrowLeft"){ go(-1); ev.preventDefault(); }
+  else if (ev.key === "Home"){ zeige(0); ev.preventDefault(); }
+  else if (ev.key === "End"){ zeige(AUFGABEN.length - 1); ev.preventDefault(); }
+});
+
+/* ==========================================================================
+   Laden
+
+   Die drei „*-advanced.json“ bleiben ungelesen: sie enthalten dieselben
+   Aufgaben noch einmal, nur anders gebündelt — wer sie mitliest, zählt alles
+   doppelt. Die zusammengefassten Lektionen entstehen aus advanced.json.
+   ========================================================================== */
+async function hole(url){
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(url + ": " + r.status);
+  return r.json();
+}
+
+async function start(){
+  drawCtl();
+  try {
+    const [adv, ...bloecke] = await Promise.all(
+      [hole("advanced.json")].concat(BLOCKS.map(b => hole("aufgaben/" + b.file + ".json"))));
+    FORT = adv.lessons || [];
+    BLOCKS.forEach((b, k) => { DATA[b.file] = bloecke[k]; });
+  } catch (e){
+    $("sub").textContent = "";
+    $("cardBody").innerHTML = '<div class="empty">Die Aufgaben ließen sich nicht laden.'
+      + "<br>Die Seite muss über einen Webserver aufgerufen werden, nicht als Datei.<br><small>"
+      + esc(e.message) + "</small></div>";
+    return;
+  }
+  drawRail();
+  frisch();
+}
+
+start();
+</script>
+</body>
+</html>
