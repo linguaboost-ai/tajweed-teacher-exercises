@@ -234,6 +234,10 @@ mark.hit{
 }
 .seg button:disabled{pointer-events:none;opacity:.5}
 
+/* Die Sprachwahl steht im Rand und darf kleiner ausfallen. */
+.seg.small{min-height:2rem}
+.seg.small button{min-height:1.75rem;padding:.25rem .75rem;font-size:.75rem}
+
 /* Die Leseaufgabe */
 .card{
   border:1px solid var(--border);border-radius:var(--radius-card);
@@ -321,7 +325,7 @@ mark.hit{
         <path d="M12 7v14"></path>
         <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path>
       </svg>
-      <h2>Lektionen</h2>
+      <h2 id="capLessons">Lektionen</h2>
     </div>
 
     <nav class="lessons" id="lessons" aria-label="Lektionen"></nav>
@@ -334,7 +338,7 @@ mark.hit{
   <main class="stage">
     <div class="wrap">
       <div>
-        <h1>Leseübungen</h1>
+        <h1 id="head1">Leseübungen</h1>
         <p class="sub" id="sub">Aufgaben werden geladen …</p>
       </div>
 
@@ -346,7 +350,7 @@ mark.hit{
         </svg>
       </div>
 
-      <div class="seg" role="group" aria-label="Gattung">
+      <div class="seg" id="segKind" role="group" aria-label="Gattung">
         <button type="button" data-kind="word" aria-pressed="true">Wörter</button>
         <button type="button" data-kind="verse" aria-pressed="false">Verse</button>
       </div>
@@ -369,7 +373,7 @@ mark.hit{
         <path d="M8 6h13"></path><path d="M8 12h13"></path><path d="M8 18h13"></path>
         <path d="M3 6h.01"></path><path d="M3 12h.01"></path><path d="M3 18h.01"></path>
       </svg>
-      <h2>Leseaufgaben</h2>
+      <h2 id="capItems">Leseaufgaben</h2>
       <span class="tally" id="tally"></span>
     </div>
     <div class="items" id="items"></div>
@@ -394,26 +398,102 @@ const BLOCKS = [
 ];
 
 const LESSONS = {
-   1:"Qaf ق und Kaf ك",              21:"Noon und Tanween vor Ya",
-   2:"Ta ط und Ta ت",                22:"Noon sakin vor 15 Buchstaben",
-   3:"Kha خ und Ha ح",               23:"Tanween vor 15 Buchstaben",
-   4:"Ghayn غ und Ha ه",             24:"Meem vor Meem",
-   5:"Dad ض und Dal د",              25:"Noon und Tanween vor Meem",
-   6:"Dha ظ und Dhal ذ",             26:"Meem vor Ba, Ba vor Meem",
-   7:"Sad ص und Seen س",             27:"Noon sakin vor Ba",
-   8:"Regeln des Ra ر",              28:"Tanween vor Ba",
-   9:"Der Name Allah",               29:"Madd Muttasil",
-  10:"Dal د und Dad ض",              30:"Madd Muttasil mit Waw und Ya",
-  11:"Ba ب",                         31:"Madd Munfasil",
-  12:"Jeem ج",                       32:"Madd Silah",
-  13:"Qaf ق und Kaf ك",              33:"Madd Lazim im Wort",
-  14:"Ta ط und Ta ت",                34:"Madd Lazim in Sureneröffnungen",
-  15:"Gleiche Buchstaben",           35:"Waqf Jaiz ج",
-  16:"Ähnliche Buchstaben",          36:"Waqf Hasan صلى",
-  17:"Noon vor Lam und Ra",          37:"Waqf Kafee قلى",
-  18:"Tanween vor Lam und Ra",       38:"Waqf Mamnoo لا",
-  19:"Noon und Tanween vor Noon",    39:"Waqf Lazim م und Saktah س",
-  20:"Noon und Tanween vor Waw",     40:"Muanaqah ۛ"
+   1:{de:"Qaf ق und Kaf ك",              en:"Qaf ق and Kaf ك"},
+   2:{de:"Ta ط und Ta ت",                en:"Ta ط and Ta ت"},
+   3:{de:"Kha خ und Ha ح",               en:"Kha خ and Ha ح"},
+   4:{de:"Ghayn غ und Ha ه",             en:"Ghayn غ and Ha ه"},
+   5:{de:"Dad ض und Dal د",              en:"Dad ض and Dal د"},
+   6:{de:"Dha ظ und Dhal ذ",             en:"Dha ظ and Dhal ذ"},
+   7:{de:"Sad ص und Seen س",             en:"Sad ص and Seen س"},
+   8:{de:"Regeln des Ra ر",              en:"Rules of the Ra ر"},
+   9:{de:"Der Name Allah",               en:"The name Allah"},
+  10:{de:"Dal د und Dad ض",              en:"Dal د and Dad ض"},
+  11:{de:"Ba ب",                         en:"Ba ب"},
+  12:{de:"Jeem ج",                       en:"Jeem ج"},
+  13:{de:"Qaf ق und Kaf ك",              en:"Qaf ق and Kaf ك"},
+  14:{de:"Ta ط und Ta ت",                en:"Ta ط and Ta ت"},
+  15:{de:"Gleiche Buchstaben",           en:"Identical letters"},
+  16:{de:"Ähnliche Buchstaben",          en:"Similar letters"},
+  17:{de:"Noon vor Lam und Ra",          en:"Noon before Lam and Ra"},
+  18:{de:"Tanween vor Lam und Ra",       en:"Tanween before Lam and Ra"},
+  19:{de:"Noon und Tanween vor Noon",    en:"Noon and Tanween before Noon"},
+  20:{de:"Noon und Tanween vor Waw",     en:"Noon and Tanween before Waw"},
+  21:{de:"Noon und Tanween vor Ya",      en:"Noon and Tanween before Ya"},
+  22:{de:"Noon sakin vor 15 Buchstaben", en:"Noon sakin before 15 letters"},
+  23:{de:"Tanween vor 15 Buchstaben",    en:"Tanween before 15 letters"},
+  24:{de:"Meem vor Meem",                en:"Meem before Meem"},
+  25:{de:"Noon und Tanween vor Meem",    en:"Noon and Tanween before Meem"},
+  26:{de:"Meem vor Ba, Ba vor Meem",     en:"Meem before Ba, Ba before Meem"},
+  27:{de:"Noon sakin vor Ba",            en:"Noon sakin before Ba"},
+  28:{de:"Tanween vor Ba",               en:"Tanween before Ba"},
+  29:{de:"Madd Muttasil",                en:"Madd Muttasil"},
+  30:{de:"Madd Muttasil mit Waw und Ya", en:"Madd Muttasil with Waw and Ya"},
+  31:{de:"Madd Munfasil",                en:"Madd Munfasil"},
+  32:{de:"Madd Silah",                   en:"Madd Silah"},
+  33:{de:"Madd Lazim im Wort",           en:"Madd Lazim in the word"},
+  34:{de:"Madd Lazim in Sureneröffnungen", en:"Madd Lazim in sura openings"},
+  35:{de:"Waqf Jaiz ج",                  en:"Waqf Jaiz ج"},
+  36:{de:"Waqf Hasan صلى",               en:"Waqf Hasan صلى"},
+  37:{de:"Waqf Kafee قلى",               en:"Waqf Kafee قلى"},
+  38:{de:"Waqf Mamnoo لا",               en:"Waqf Mamnoo لا"},
+  39:{de:"Waqf Lazim م und Saktah س",    en:"Waqf Lazim م and Saktah س"},
+  40:{de:"Muanaqah ۛ",                   en:"Muanaqah ۛ"}
+};
+
+/* ==========================================================================
+   Beschriftung — deutsch und englisch, wie in der Übungs-App
+   ========================================================================== */
+const T = {
+  de:{
+    htmlLang:"de",
+    title:"German Method – Leseübungen",
+    head:"Leseübungen",
+    lessons:"Lektionen",
+    items:"Leseaufgaben",
+    lesson:"Lektion",
+    selected:"Ausgewählt",
+    words:"Wörter", verses:"Verse",
+    wordsN:"Wörter", versesN:"Verse",
+    of:"von",
+    back:"Zurück", next:"Weiter",
+    kind:"Gattung", language:"Sprache",
+    advTafkheem:"Tafkheem fortgeschritten", advQalqala:"Qalqalah fortgeschritten",
+    advHint:"fasst 1–7 zusammen", advHint2:"fasst 10–14 zusammen",
+    spots:"Regelstellen einfärben", spotsHint:"nur für den Lehrer",
+    covers:n => "Fasst Lektion " + n + " zusammen",
+    noWords:"In dieser Lektion gibt es keine Wörter.",
+    noVerses:"In dieser Lektion gibt es keine Verse.",
+    noWordsPick:"In dieser Lektion gibt es keine Wörter — wählen Sie „Verse“.",
+    noVersesPick:"In dieser Lektion gibt es keine Verse — wählen Sie „Wörter“.",
+    loading:"Aufgaben werden geladen …",
+    failed:"Die Aufgaben ließen sich nicht laden.",
+    failedHint:"Die Seite muss über einen Webserver aufgerufen werden, nicht als Datei."
+  },
+  en:{
+    htmlLang:"en",
+    title:"German Method – Reading practice",
+    head:"Reading practice",
+    lessons:"Lessons",
+    items:"Reading tasks",
+    lesson:"Lesson",
+    selected:"Selected",
+    words:"Words", verses:"Verses",
+    wordsN:"words", versesN:"verses",
+    of:"of",
+    back:"Back", next:"Next",
+    kind:"Kind", language:"Language",
+    advTafkheem:"Tafkheem advanced", advQalqala:"Qalqalah advanced",
+    advHint:"covers lessons 1–7", advHint2:"covers lessons 10–14",
+    spots:"Highlight rule spots", spotsHint:"for the teacher only",
+    covers:n => "Covers lessons " + n,
+    noWords:"This lesson has no words.",
+    noVerses:"This lesson has no verses.",
+    noWordsPick:"This lesson has no words \u2014 choose \u201cVerses\u201d.",
+    noVersesPick:"This lesson has no verses \u2014 choose \u201cWords\u201d.",
+    loading:"Loading exercises …",
+    failed:"The exercises could not be loaded.",
+    failedHint:"The page must be served over a web server, not opened as a file."
+  }
 };
 
 /* ==========================================================================
@@ -426,6 +506,9 @@ const store = {
 };
 
 const S = {
+  /* Deutsch oder Englisch — derselbe Schlüssel wie in der Übungs-App, damit
+     der Lehrer die Sprache nur einmal wählt. */
+  lang: store.get("tajwid.lang", "") === "en" ? "en" : "de",
   /* Für Fortgeschrittene sind die Lektionen zusammengefasst — das ist der
      Normalfall; dieselben Schlüssel wie in der Übungs-App. */
   advTafkheem: store.get("tajwid.advTafkheem", "1") === "1",
@@ -563,7 +646,7 @@ function lektionsliste(){
     if (hier.length){
       for (const f of hier)
         aus.push({nr: nr++, key: f.id, fort: f, block: f.group,
-                  titel: f.de, quelle: f.replaces});
+                  titel: {de: f.de, en: f.en || f.de}, quelle: f.replaces});
       alt = hier[0].replaces[hier[0].replaces.length - 1] + 1;
     } else {
       aus.push({nr: nr++, key: "L" + alt, lesson: alt, block: blockOf(alt).file,
@@ -577,6 +660,9 @@ function lektionsliste(){
 function aktuelle(liste){
   return liste.find(e => e.key === S.key) || liste[0];
 }
+
+const t = () => T[S.lang];
+const titelVon = e => e.titel[S.lang] || e.titel.de;
 
 /* ==========================================================================
    Aufgaben der gewählten Lektion
@@ -621,11 +707,33 @@ function schalter(id, an, tx, hint){
 }
 
 function drawCtl(){
-  const html = schalter("advTafkheem", S.advTafkheem, "Tafkheem fortgeschritten", "fasst 1–7 zusammen")
-             + schalter("advQalqala",  S.advQalqala,  "Qalqalah fortgeschritten", "fasst 10–14 zusammen")
-             + schalter("spots",       S.spots,       "Regelstellen einfärben",   "nur für den Lehrer");
+  const x = t();
+  const sprache =
+      '<div class="seg small" role="group" aria-label="' + esc(x.language) + '">'
+    + '<button type="button" data-lang="de" aria-pressed="' + (S.lang === "de") + '">Deutsch</button>'
+    + '<button type="button" data-lang="en" aria-pressed="' + (S.lang === "en") + '">English</button>'
+    + "</div>";
+  const html = sprache
+             + schalter("advTafkheem", S.advTafkheem, x.advTafkheem, x.advHint)
+             + schalter("advQalqala",  S.advQalqala,  x.advQalqala,  x.advHint2)
+             + schalter("spots",       S.spots,       x.spots,       x.spotsHint);
   $("ctlRail").innerHTML = html;
   $("ctlMob").innerHTML = html;
+}
+
+/* Was fest im Gerüst steht und nicht neu gezeichnet wird. */
+function drawChrome(){
+  const x = t();
+  document.documentElement.lang = x.htmlLang;
+  document.title = x.title;
+  $("head1").textContent = x.head;
+  $("capLessons").textContent = x.lessons;
+  $("capItems").textContent = x.items;
+  $("segKind").setAttribute("aria-label", x.kind);
+  $("lessons").setAttribute("aria-label", x.lessons);
+  $("pickLesson").setAttribute("aria-label", x.lesson);
+  document.querySelectorAll("#segKind button").forEach(b =>
+    b.textContent = b.dataset.kind === "word" ? x.words : x.verses);
 }
 
 function drawRail(){
@@ -659,34 +767,33 @@ function drawRail(){
     btn.className = "lesson";
     btn.setAttribute("aria-current", String(e.key === hier.key));
     btn.innerHTML = '<span class="no">' + e.nr + '</span>'
-                  + '<span class="tt">' + titelHTML(e.titel) + '</span>'
+                  + '<span class="tt">' + titelHTML(titelVon(e)) + '</span>'
                   + '<span class="ct">' + n + '</span>';
-    if (e.fort) btn.title = "Fasst Lektion " + e.quelle[0] + "–"
-                          + e.quelle[e.quelle.length - 1] + " zusammen";
+    if (e.fort) btn.title = t().covers(e.quelle[0] + "–"
+                                     + e.quelle[e.quelle.length - 1]);
     btn.addEventListener("click", () => openLesson(e.key));
     if (e.key === hier.key) aktiv = btn;
     nav.append(btn);
 
     const opt = document.createElement("option");
     opt.value = e.key;
-    opt.textContent = e.nr + ". " + e.titel + " (" + n + ")";
+    opt.textContent = e.nr + ". " + titelVon(e) + " (" + n + ")";
     opt.selected = e.key === hier.key;
     gruppe.append(opt);
   }
   if (aktiv) aktiv.scrollIntoView({block: "nearest"});
 
-  $("railfoot").innerHTML = "Ausgewählt: " + hier.nr + ". " + titelHTML(hier.titel);
-  $("sub").innerHTML = "Lektion " + hier.nr + " \u2014 " + titelHTML(hier.titel);
+  $("railfoot").innerHTML = t().selected + ": " + hier.nr + ". " + titelHTML(titelVon(hier));
+  $("sub").innerHTML = t().lesson + " " + hier.nr + " \u2014 " + titelHTML(titelVon(hier));
 }
 
 function drawSeg(e){
   const leer = {word: anzahl(e, "word") === 0, verse: anzahl(e, "verse") === 0};
-  document.querySelectorAll(".seg button").forEach(b => {
+  document.querySelectorAll("#segKind button").forEach(b => {
     const k = b.dataset.kind;
     b.disabled = leer[k];
     b.setAttribute("aria-pressed", String(k === S.kind));
-    b.title = leer[k] ? "In dieser Lektion gibt es keine "
-                      + (k === "word" ? "Wörter" : "Verse") : "";
+    b.title = leer[k] ? (k === "word" ? t().noWords : t().noVerses) : "";
   });
 }
 
@@ -694,14 +801,12 @@ function drawList(){
   const box = $("items");
   box.innerHTML = "";
   $("tally").textContent = AUFGABEN.length
-    ? AUFGABEN.length + (S.kind === "word" ? " Wörter" : " Verse") : "";
+    ? AUFGABEN.length + " " + (S.kind === "word" ? t().wordsN : t().versesN) : "";
 
   if (!AUFGABEN.length){
     const d = document.createElement("div");
     d.className = "none";
-    d.textContent = S.kind === "word"
-      ? "In dieser Lektion gibt es keine Wörter."
-      : "In dieser Lektion gibt es keine Verse.";
+    d.textContent = S.kind === "word" ? t().noWords : t().noVerses;
     box.append(d);
     return;
   }
@@ -723,9 +828,7 @@ function drawCard(){
   const body = $("cardBody");
   if (!AUFGABEN.length){
     body.innerHTML = '<div class="empty">'
-      + (S.kind === "word" ? "In dieser Lektion gibt es keine Wörter — wählen Sie „Verse“."
-                           : "In dieser Lektion gibt es keine Verse — wählen Sie „Wörter“.")
-      + "</div>";
+      + esc(S.kind === "word" ? t().noWordsPick : t().noVersesPick) + "</div>";
     return;
   }
   const a = AUFGABEN[S.i];
@@ -733,20 +836,20 @@ function drawCard(){
 
   body.innerHTML =
       '<div class="row">'
-    +   '<button type="button" class="nav" data-go="-1" aria-label="Zurück"'
+    +   '<button type="button" class="nav" data-go="-1" aria-label="' + esc(t().back) + '"'
     +     (S.i === 0 ? " disabled" : "") + '>'
     +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
     +     ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
     +     '<path d="m15 18-6-6 6-6"></path></svg></button>'
     +   '<p class="subject ar' + (lang ? " long" : "") + '" dir="rtl" lang="ar">'
     +     textHTML(a.text, a.spots, S.spots) + "</p>"
-    +   '<button type="button" class="nav" data-go="1" aria-label="Weiter"'
+    +   '<button type="button" class="nav" data-go="1" aria-label="' + esc(t().next) + '"'
     +     (S.i === AUFGABEN.length - 1 ? " disabled" : "") + '>'
     +     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"'
     +     ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
     +     '<path d="m9 18 6-6-6-6"></path></svg></button>'
     + "</div>"
-    + '<div class="foot">' + (S.i + 1) + " von " + AUFGABEN.length + "</div>";
+    + '<div class="foot">' + (S.i + 1) + " " + t().of + " " + AUFGABEN.length + "</div>";
 
   body.querySelectorAll("[data-go]").forEach(b =>
     b.addEventListener("click", () => go(Number(b.dataset.go))));
@@ -798,8 +901,30 @@ function setKind(kind){
   frisch();
 }
 
-document.querySelectorAll(".seg button").forEach(b =>
-  b.addEventListener("click", () => setKind(b.dataset.kind)));
+$("segKind").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-kind]");
+  if (b && !b.disabled) setKind(b.dataset.kind);
+});
+
+/* Sprache umlegen: alles neu beschriften, die Aufgaben bleiben, wie sie sind. */
+function setLang(lang){
+  if (lang !== "de" && lang !== "en") return;
+  if (lang === S.lang) return;
+  S.lang = lang;
+  store.set("tajwid.lang", lang);
+  const i = S.i;
+  drawChrome();
+  drawCtl();
+  drawRail();
+  frisch();
+  zeige(i);
+}
+
+/* Beide Schalterblöcke tragen dieselbe Sprachwahl. */
+document.addEventListener("click", ev => {
+  const b = ev.target.closest(".ctl [data-lang]");
+  if (b) setLang(b.dataset.lang);
+});
 
 $("pickLesson").addEventListener("change", ev => openLesson(ev.target.value));
 
@@ -848,7 +973,10 @@ async function hole(url){
 }
 
 async function start(){
+  drawChrome();
   drawCtl();
+  $("sub").textContent = t().loading;
+  $("cardEmpty").textContent = t().loading;
   try {
     const [adv, ...bloecke] = await Promise.all(
       [hole("advanced.json")].concat(BLOCKS.map(b => hole("aufgaben/" + b.file + ".json"))));
@@ -856,8 +984,8 @@ async function start(){
     BLOCKS.forEach((b, k) => { DATA[b.file] = bloecke[k]; });
   } catch (e){
     $("sub").textContent = "";
-    $("cardBody").innerHTML = '<div class="empty">Die Aufgaben ließen sich nicht laden.'
-      + "<br>Die Seite muss über einen Webserver aufgerufen werden, nicht als Datei.<br><small>"
+    $("cardBody").innerHTML = '<div class="empty">' + esc(t().failed)
+      + "<br>" + esc(t().failedHint) + "<br><small>"
       + esc(e.message) + "</small></div>";
     return;
   }

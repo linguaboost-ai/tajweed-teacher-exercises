@@ -17,24 +17,30 @@ Aufbau, Schriften, Farben, Abstände und Knöpfe sind von `teacher-exercises.htm
 Verse stehen in der Liste auf die ersten drei Wörter gekürzt, Wörter voll.
 In jeder Lektion wählt man eine Gattung: **Wörter** oder **Verse**.
 
-Drei Schalter am linken Rand, alle im Browser gemerkt:
+Die Seite ist **deutsch und englisch**; umgeschaltet wird am linken Rand. Die
+Lektionstitel stehen in beiden Sprachen im Quelltext, die der zusammengefassten
+Lektionen in `advanced.json` unter `de` und `en`. Der arabische Text bleibt
+selbstverständlich in beiden Sprachen derselbe, und der Platz in der Liste geht
+beim Umschalten nicht verloren.
 
-| Schalter                   | Wirkung                                      | Voreinstellung | localStorage              |
+Vier Einstellungen am linken Rand, alle im Browser gemerkt:
+
+| Einstellung                | Wirkung                                      | Voreinstellung | localStorage              |
 |----------------------------|----------------------------------------------|----------------|---------------------------|
+| Deutsch / English          | Sprache der Beschriftung                     | Deutsch        | `tajwid.lang`             |
 | Tafkheem fortgeschritten   | fasst Lektion 1–7 zu einer zusammen          | an             | `tajwid.advTafkheem`      |
 | Qalqalah fortgeschritten   | fasst Lektion 10–14 zu zweien zusammen       | an             | `tajwid.advQalqala`       |
 | Regelstellen einfärben     | färbt `subject.spots` ein — für den Lehrer   | aus            | `tajwid.teacherSpots`     |
 
-Die ersten zwei Schlüssel sind dieselben wie in der Übungs-App, beide Seiten
-verstehen sich also. Mit beiden Schaltern hat der Lehrplan 31 Lektionen statt
-40, mit einem 34 bzw. 37.
+Die ersten drei Schlüssel sind dieselben wie in der Übungs-App, beide Seiten
+verstehen sich also. Mit beiden Fortgeschritten-Schaltern hat der Lehrplan
+31 Lektionen statt 40, mit einem 34 bzw. 37.
 
 ### Aufrufen
 
 Im Netz: <https://tajweed-teacher-exercises.vercel.app> — Vercel liefert das
-Repository aus, `/` zeigt die Leseübungen (siehe `vercel.json`). Jeder Push auf
-einen Zweig baut eine eigene Adresse; der Zweig dieser Seite liegt unter
-`tajweed-teacher-exercises-git-c-467ca1-linguaboost-ais-projects.vercel.app`.
+Repository aus, `/` zeigt die Leseübungen (siehe `vercel.json`). Gebaut wird
+`main`, jeder Push dorthin geht sofort auf diese Adresse.
 
 Örtlich: die Seite lädt die Aufgaben zur Laufzeit und braucht deshalb einen
 Webserver — als Datei geöffnet sagt sie das auch:
