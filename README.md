@@ -51,9 +51,28 @@ Webserver — als Datei geöffnet sagt sie das auch:
 Keine Bauwerkzeuge, kein Framework, kein CDN: eine HTML-Datei, die Aufgaben,
 die beiden Schriften und das Logo.
 
+### Wo die Adresse nicht erreichbar ist
+
+`*.vercel.app` wird in manchen Netzen gesperrt oder ist schlecht geroutet —
+dann hilft keine Einstellung am Server. Für diesen Fall liegt
+**`teacher-reading-offline.html`** bereit: eine einzige Datei mit allem darin,
+rund 0,9 MB, gezippt etwa 250 KB. Verschicken, speichern, per Doppelklick
+öffnen — ohne Webserver und ohne Verbindung. Sie fragt nichts nach draußen.
+
+Neu bauen, wenn sich die Aufgaben oder die Seite geändert haben:
+
+    python3 werkzeug/einzeldatei.py
+
+Das Werkzeug lässt den Quelltext der Seite unangetastet; es ersetzt nur die
+Ladeschicht durch die eingebauten Daten und die Verweise auf Schriften und
+Logo durch `data:`-URIs. Im Fenstertitel steht „(Einzeldatei)", damit im
+Zweifel klar ist, welche Fassung jemand vor sich hat.
+
 ## Was hier liegt
 
     teacher-reading.html        die neue Seite
+    teacher-reading-offline.html  dieselbe Seite als eine Datei, ohne Netz
+    werkzeug/einzeldatei.py     baut diese eine Datei
     teacher-exercises.html      die Vorlage (gespeicherte Seite der App)
     teacher-exercises_files/    deren Beiwerk
     aufgaben/*.json             die Übungsaufgaben
