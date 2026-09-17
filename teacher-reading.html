@@ -467,7 +467,9 @@ const T = {
     noVersesPick:"In dieser Lektion gibt es keine Verse — wählen Sie „Wörter“.",
     loading:"Aufgaben werden geladen …",
     failed:"Die Aufgaben ließen sich nicht laden.",
-    failedHint:"Die Seite muss über einen Webserver aufgerufen werden, nicht als Datei."
+    failedFile:"Die Seite muss über einen Webserver aufgerufen werden, nicht als Datei.",
+    failedNet:"Die Verbindung ist gescheitert. Die übrigen Lektionen gehen weiter.",
+    retry:"Nochmal versuchen"
   },
   en:{
     htmlLang:"en",
@@ -492,7 +494,9 @@ const T = {
     noVersesPick:"This lesson has no verses \u2014 choose \u201cWords\u201d.",
     loading:"Loading exercises …",
     failed:"The exercises could not be loaded.",
-    failedHint:"The page must be served over a web server, not opened as a file."
+    failedFile:"The page must be served over a web server, not opened as a file.",
+    failedNet:"The connection failed. The other lessons still work.",
+    retry:"Try again"
   }
 };
 
@@ -524,8 +528,12 @@ const S = {
 };
 
 let FORT = null;          // die zusammengefassten Lektionen aus advanced.json
-const DATA = {};          // block -> Aufgaben
+const DATA = {};          // block -> Aufgaben, sobald geladen
+const LADEN = {};         // block -> laufendes Versprechen
+const FEHLER = {};        // block -> was schiefging
 let AUFGABEN = [];        // die Leseaufgaben der gewählten Lektion und Gattung
+
+const blockDa = f => Object.prototype.hasOwnProperty.call(DATA, f);
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -684,6 +692,7 @@ const gattung = x => (x.sura == null ? "word" : "verse");
 /* Innerhalb einer Lektion nach identischem Text entdoppeln — derselbe Vers
    kommt in mehreren Aufgaben vor, der Lehrer will ihn einmal. */
 function leseliste(e, kind){
+  if (!blockDa(e.block)) return [];
   const gesehen = new Map();
   for (const x of aufgabenDerLektion(e)){
     if (gattung(x) !== kind) continue;
@@ -694,6 +703,12 @@ function leseliste(e, kind){
 }
 
 function anzahl(e, kind){ return leseliste(e, kind).length; }
+
+/* Solange der Block einer Lektion nicht da ist, kennt die Seite ihre Zahl
+   nicht — dann steht dort nichts, statt einer falschen Null. */
+function zahlFuer(e){
+  return blockDa(e.block) ? anzahl(e, "word") + anzahl(e, "verse") : null;
+}
 
 /* ==========================================================================
    Zeichnen
@@ -760,7 +775,7 @@ function drawRail(){
       sel.append(gruppe);
     }
 
-    const n = anzahl(e, "word") + anzahl(e, "verse");
+    const n = zahlFuer(e);
 
     const btn = document.createElement("button");
     btn.type = "button";
@@ -768,7 +783,7 @@ function drawRail(){
     btn.setAttribute("aria-current", String(e.key === hier.key));
     btn.innerHTML = '<span class="no">' + e.nr + '</span>'
                   + '<span class="tt">' + titelHTML(titelVon(e)) + '</span>'
-                  + '<span class="ct">' + n + '</span>';
+                  + '<span class="ct">' + (n === null ? "" : n) + '</span>';
     if (e.fort) btn.title = t().covers(e.quelle[0] + "–"
                                      + e.quelle[e.quelle.length - 1]);
     btn.addEventListener("click", () => openLesson(e.key));
@@ -777,7 +792,7 @@ function drawRail(){
 
     const opt = document.createElement("option");
     opt.value = e.key;
-    opt.textContent = e.nr + ". " + titelVon(e) + " (" + n + ")";
+    opt.textContent = e.nr + ". " + titelVon(e) + (n === null ? "" : " (" + n + ")");
     opt.selected = e.key === hier.key;
     gruppe.append(opt);
   }
@@ -785,6 +800,20 @@ function drawRail(){
 
   $("railfoot").innerHTML = t().selected + ": " + hier.nr + ". " + titelHTML(titelVon(hier));
   $("sub").innerHTML = t().lesson + " " + hier.nr + " \u2014 " + titelHTML(titelVon(hier));
+}
+
+/* Kommt ein Block im Hintergrund an, werden nur die Zahlen nachgetragen —
+   ein vollständiges Neuzeichnen würde die Liste unter dem Finger wegscrollen. */
+function updateCounts(){
+  const liste = lektionsliste();
+  const rows = $("lessons").querySelectorAll(".lesson");
+  const opts = $("pickLesson").querySelectorAll("option");
+  liste.forEach((e, i) => {
+    const n = zahlFuer(e);
+    if (rows[i]) rows[i].querySelector(".ct").textContent = n === null ? "" : n;
+    if (opts[i]) opts[i].textContent = e.nr + ". " + titelVon(e)
+                                     + (n === null ? "" : " (" + n + ")");
+  });
 }
 
 function drawSeg(e){
@@ -855,6 +884,31 @@ function drawCard(){
     b.addEventListener("click", () => go(Number(b.dataset.go))));
 }
 
+/* Während ein Block unterwegs ist, und wenn er nicht kommt. */
+function ladeAnsicht(){
+  $("cardBody").innerHTML = '<div class="empty">' + esc(t().loading) + "</div>";
+  $("items").innerHTML = "";
+  $("tally").textContent = "";
+}
+
+function fehlerAnsicht(err){
+  const x = t();
+  /* Als Datei geöffnet ist der Hinweis auf den Webserver richtig; über einen
+     Webserver geladen ist es die Verbindung, und dann hilft ein neuer Versuch. */
+  const datei = location.protocol === "file:";
+  $("cardBody").innerHTML =
+      '<div class="empty">' + esc(x.failed)
+    + "<br>" + esc(datei ? x.failedFile : x.failedNet)
+    + (datei ? "" : '<br><br><button type="button" class="nav" id="retry" '
+                  + 'style="width:auto;padding:0 1.25rem;border:1px solid var(--border)">'
+                  + esc(x.retry) + "</button>")
+    + '<br><small>' + esc(err && err.message ? err.message : String(err)) + "</small></div>";
+  $("items").innerHTML = "";
+  $("tally").textContent = "";
+  const b = $("retry");
+  if (b) b.addEventListener("click", () => zeigeLektion());
+}
+
 /* ==========================================================================
    Steuern
    ========================================================================== */
@@ -888,17 +942,38 @@ function frisch(){
   drawCard();
 }
 
+/* Sorgt dafür, dass der Block der gewählten Lektion da ist, und zeichnet sie.
+   Nur dieser eine Block wird verlangt — nicht alle sieben. */
+async function zeigeLektion(){
+  const e = aktuelle(lektionsliste());
+  if (!blockDa(e.block)){
+    delete FEHLER[e.block];          /* ein neuer Aufruf ist ein neuer Versuch */
+    ladeAnsicht();
+    try {
+      await ladeBlock(e.block);
+    } catch (err){
+      /* Nur diese Lektion fällt aus; die anderen Blöcke bleiben benutzbar. */
+      if (aktuelle(lektionsliste()).key === e.key) fehlerAnsicht(err);
+      updateCounts();
+      return;
+    }
+    if (aktuelle(lektionsliste()).key !== e.key) return;   /* inzwischen gewechselt */
+  }
+  frisch();
+  updateCounts();
+}
+
 function openLesson(key){
   S.key = key;
   store.set("tajwid.teacherLesson", key);
   drawRail();
-  frisch();
+  zeigeLektion();
 }
 
 function setKind(kind){
   S.kind = kind;
   store.set("tajwid.teacherKind", kind);
-  frisch();
+  zeigeLektion();
 }
 
 $("segKind").addEventListener("click", ev => {
@@ -907,7 +982,7 @@ $("segKind").addEventListener("click", ev => {
 });
 
 /* Sprache umlegen: alles neu beschriften, die Aufgaben bleiben, wie sie sind. */
-function setLang(lang){
+async function setLang(lang){
   if (lang !== "de" && lang !== "en") return;
   if (lang === S.lang) return;
   S.lang = lang;
@@ -916,7 +991,7 @@ function setLang(lang){
   drawChrome();
   drawCtl();
   drawRail();
-  frisch();
+  await zeigeLektion();
   zeige(i);
 }
 
@@ -946,7 +1021,7 @@ document.addEventListener("change", ev => {
   store.set("tajwid." + id, sw.checked ? "1" : "0");
   drawCtl();
   drawRail();
-  frisch();
+  zeigeLektion();
 });
 
 /* Pfeiltasten, damit der Lehrer ohne Maus durch die Liste kommt. */
@@ -966,10 +1041,50 @@ document.addEventListener("keydown", ev => {
    Aufgaben noch einmal, nur anders gebündelt — wer sie mitliest, zählt alles
    doppelt. Die zusammengefassten Lektionen entstehen aus advanced.json.
    ========================================================================== */
-async function hole(url){
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(url + ": " + r.status);
-  return r.json();
+/* Eine hängende Anfrage darf die Seite nicht endlos warten lassen, und ein
+   einzelner Aussetzer soll nicht gleich alles kosten: Zeitgrenze und ein
+   zweiter Versuch. */
+const FRIST = 20000;
+
+async function hole(url, versuche){
+  let letzte;
+  for (let n = 0; n < (versuche || 2); n++){
+    const abbruch = typeof AbortController === "function" ? new AbortController() : null;
+    const uhr = setTimeout(() => { if (abbruch) abbruch.abort(); }, FRIST);
+    try {
+      const r = await fetch(url, abbruch ? {signal: abbruch.signal} : undefined);
+      if (!r.ok) throw new Error(url + " — HTTP " + r.status);
+      return await r.json();
+    } catch (e){
+      letzte = (e && e.name === "AbortError")
+             ? new Error(url + " — keine Antwort innerhalb von " + (FRIST / 1000) + " s")
+             : e;
+    } finally {
+      clearTimeout(uhr);
+    }
+  }
+  throw letzte;
+}
+
+/* Jeder Block wird höchstens einmal geladen; ein gescheiterter Versuch darf
+   wiederholt werden. */
+function ladeBlock(f){
+  if (blockDa(f)) return Promise.resolve(DATA[f]);
+  if (!LADEN[f]){
+    LADEN[f] = hole("aufgaben/" + f + ".json")
+      .then(d => { DATA[f] = d; delete FEHLER[f]; return d; })
+      .catch(e => { FEHLER[f] = e; delete LADEN[f]; throw e; });
+  }
+  return LADEN[f];
+}
+
+/* Die übrigen Blöcke kommen im Hintergrund nach — sie werden nur für die
+   Zahlen im Rand gebraucht, nicht für die gezeigte Lektion. */
+function nachladen(){
+  for (const b of BLOCKS){
+    if (blockDa(b.file) || LADEN[b.file]) continue;
+    ladeBlock(b.file).then(updateCounts, updateCounts);
+  }
 }
 
 async function start(){
@@ -977,20 +1092,15 @@ async function start(){
   drawCtl();
   $("sub").textContent = t().loading;
   $("cardEmpty").textContent = t().loading;
-  try {
-    const [adv, ...bloecke] = await Promise.all(
-      [hole("advanced.json")].concat(BLOCKS.map(b => hole("aufgaben/" + b.file + ".json"))));
-    FORT = adv.lessons || [];
-    BLOCKS.forEach((b, k) => { DATA[b.file] = bloecke[k]; });
-  } catch (e){
-    $("sub").textContent = "";
-    $("cardBody").innerHTML = '<div class="empty">' + esc(t().failed)
-      + "<br>" + esc(t().failedHint) + "<br><small>"
-      + esc(e.message) + "</small></div>";
-    return;
-  }
+
+  /* advanced.json entscheidet über die Nummerierung und ist winzig. Fehlt es,
+     zeigt die Seite eben die 40 einzelnen Lektionen statt aufzugeben. */
+  try { FORT = (await hole("advanced.json")).lessons || []; }
+  catch (e){ FORT = []; }
+
   drawRail();
-  frisch();
+  await zeigeLektion();
+  nachladen();
 }
 
 start();
